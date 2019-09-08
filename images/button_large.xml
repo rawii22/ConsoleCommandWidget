@@ -1,0 +1,8 @@
+<Atlas>
+	<Texture filename="button_large.tex" />
+	<Elements>
+		<Element name="normal.tex" u1="0" u2="1" v1="0.9" v2="1" />
+		<Element name="focus.tex" u1="0" u2="1" v1="0.8" v2="0.9" />
+		<Element name="disabled.tex" u1="0" u2="1" v1="0.8" v2="0.9" />
+	</Elements>
+</Atlas>
