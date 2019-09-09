@@ -59,6 +59,21 @@ if (SUPPORT_ARCHERY) then
 	offset_archery = -128
 end
 
+local commands = {
+	nextphase = "TheWorld:PushEvent(\"ms_nextphase\")",
+	stoprain = "TheWorld:PushEvent(\"ms_forceprecipitation\", false)",
+	startrain = "TheWorld:PushEvent(\"ms_forceprecipitation\", true)",
+	supergodmode = "c_supergodmode()",
+	creativemode = "GetPlayer().components.builder:GiveAllRecipes()",
+	reset = "c_reset",
+	resetsanity = "AllPlayers[1].components.sanity:SetPercent(1)",
+	speedmult1 = "c_speedmult(1)",
+	speedmult4 = "c_speedmult(4)",
+	speedmult35 = "c_speedmult(35)",
+	revealmapallplayers = "for k,v in pairs(AllPlayers) do for x=-1600,1600,35 do for y=-1600,1600,35 do v.player_classified.MapExplorer:RevealArea(x,0,y) end end end",
+	setautumn = "TheWorld:PushEvent(\"ms_setseason\", \"autumn\")",
+}
+
 local default_icon = {
 	"spear",
 	"axe",
@@ -187,7 +202,7 @@ local info_stack = {last=0}
 local info_names = {last=0}
 local info_back_button
 local info_actual_button
-local base_position = { x =-600, y = -50}
+local base_position = { x = -600, y = -50}
 local col = 0
 local row = 0
 local offset_x = 160
@@ -712,8 +727,13 @@ local function InitKeybindButtons(self)
 	tools_back:MoveToBack()
 	
 	equip_back = self:AddChild(Image("images/basic_back.xml","equip_back.tex"))
-	equip_back:SetPosition(460+158-42+offset_archery,170+(67*VERTICAL_OFFSET),0)
-	equip_back:MoveToBack()
+	equip_back:SetPosition(-1300,90,0)	--equip_back:SetPosition(460+158-42+offset_archery,170+(67*VERTICAL_OFFSET),0)
+	equip_back:MoveToFront()
+	testButton = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+	
+	testButton:SetPosition(-1350,90,0)
+	testButton:SetOnClick(function(inst) return GLOBAL.ExecuteConsoleCommand("TheWorld:PushEvent(\"ms_forceprecipitation\", true)") end)
+	testButton:MoveToFront()
 	
 	if (DISABLE_BUTTONS) then
 		tools_back:Hide()
