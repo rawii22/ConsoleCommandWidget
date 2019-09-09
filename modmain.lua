@@ -37,6 +37,7 @@ local Image = GLOBAL.require("widgets/image")
 local ImageButton = GLOBAL.require("widgets/imagebutton")
 local Button = GLOBAL.require("widgets/button")
 
+local modname = "ConsoleCommandWidget";
 local cantButtons = 11
 
 local button = {}
@@ -735,6 +736,11 @@ local function InitKeybindButtons(self)
 	testButton:SetOnClick(function(inst) return GLOBAL.ExecuteConsoleCommand("TheWorld:PushEvent(\"ms_forceprecipitation\", true)") end)
 	testButton:MoveToFront()
 	
+	fun_button = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+	fun_button:SetPosition(x,160+(67*VERTICAL_OFFSET)+ 500,0)
+	fun_button:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname]["receivecommand"], "c_give(\"honey\")") end)
+	fun_button:MoveToFront()
+	
 	if (DISABLE_BUTTONS) then
 		tools_back:Hide()
 		equip_back:Hide()
@@ -824,3 +830,5 @@ GLOBAL.TheInput:AddKeyUpHandler(
 	end
 )
 ]]--
+
+AddModRPCHandler(modname, "receivecommand", function(player, commandString) GLOBAL.ExecuteConsoleCommand(commandString) end)
