@@ -730,16 +730,26 @@ local function InitKeybindButtons(self)
 	equip_back = self:AddChild(Image("images/basic_back.xml","equip_back.tex"))
 	equip_back:SetPosition(-1300,90,0)	--equip_back:SetPosition(460+158-42+offset_archery,170+(67*VERTICAL_OFFSET),0)
 	equip_back:MoveToFront()
-	testButton = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
 	
-	testButton:SetPosition(-1350,90,0)
-	testButton:SetOnClick(function(inst) return GLOBAL.ExecuteConsoleCommand("TheWorld:PushEvent(\"ms_forceprecipitation\", true)") end)
+	supergodmode_button = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+	supergodmode_button:SetPosition(-1420,80,0)
+	supergodmode_button:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname]["receivecommand"], commands.nextphase) end)
+	supergodmode_button:MoveToFront()
+	
+	testButton = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+	testButton:SetPosition(-1340,80,0)
+	testButton:SetOnClick(function(inst) return GLOBAL.ExecuteConsoleCommand(commands.startrain) end)
 	testButton:MoveToFront()
 	
 	fun_button = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
-	fun_button:SetPosition(x,160+(67*VERTICAL_OFFSET)+ 500,0)
+	fun_button:SetPosition(-1260,80,0)
 	fun_button:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname]["receivecommand"], "c_give(\"honey\")") end)
 	fun_button:MoveToFront()
+	
+	creativemode_button = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+	creativemode_button:SetPosition(-1180,80,0)
+	creativemode_button:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname]["receivecommand"], commands.creativemode) end)
+	creativemode_button:MoveToFront()
 	
 	if (DISABLE_BUTTONS) then
 		tools_back:Hide()
