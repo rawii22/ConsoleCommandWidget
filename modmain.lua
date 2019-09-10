@@ -66,13 +66,49 @@ local commands = {
 	startrain = "TheWorld:PushEvent(\"ms_forceprecipitation\", true)",
 	supergodmode = "c_supergodmode()",
 	creativemode = "GetPlayer().components.builder:GiveAllRecipes()",
-	reset = "c_reset",
+	reset = "c_reset()",
 	resetsanity = "AllPlayers[1].components.sanity:SetPercent(1)",
 	speedmult1 = "c_speedmult(1)",
 	speedmult4 = "c_speedmult(4)",
 	speedmult35 = "c_speedmult(35)",
 	revealmapallplayers = "for k,v in pairs(AllPlayers) do for x=-1600,1600,35 do for y=-1600,1600,35 do v.player_classified.MapExplorer:RevealArea(x,0,y) end end end",
 	setautumn = "TheWorld:PushEvent(\"ms_setseason\", \"autumn\")",
+}
+
+local xDim = 8
+local yDim = 2
+local baseSlotPos = { x = -1450, y = 180 }
+local slotPos = {}
+
+for y = 0, (yDim-1) do
+    for x = 0, (xDim-1) do
+		-- size of inventory square is < 75
+        table.insert(slotPos, GLOBAL.Vector3(baseSlotPos.x + 75 * x, baseSlotPos.y - 75 * y, 0))
+    end
+end
+
+local command_button = {}
+local command_list = {
+	{
+		command_string = commands.reset,
+		tooltip = "Reset",
+		pos = slotPos[1]
+	},
+	{
+		command_string = commands.supergodmode,
+		tooltip = "Super God-Mode",
+		pos = slotPos[2]
+	},
+	{
+		command_string = commands.nextphase,
+		tooltip = "Next Day-Phase",
+		pos = slotPos[3]
+	},
+	{
+		command_string = commands.startrain,
+		tooltip = "Start Rain",
+		pos = slotPos[4]
+	}
 }
 
 local default_icon = {
@@ -195,7 +231,9 @@ Assets = {
 	Asset("ATLAS", "images/basic_back.xml"),
 	Asset("IMAGE", "images/basic_back.tex"),
 	Asset("ATLAS", "images/button_large.xml"),
-	Asset("IMAGE", "images/button_large.tex")
+	Asset("IMAGE", "images/button_large.tex"),
+	Asset("ATLAS", "images/ui_panel_2x8.xml"),
+	Asset("IMAGE", "images/ui_panel_2x8.tex")
 }
 
 local info_buttons = {}
@@ -716,6 +754,10 @@ local function AddKeybindButton(self,index)
 	end
 end
 
+--[[
+TheNet:GetClientTable()[playerNumber].admin
+]]
+
 local function InitKeybindButtons(self)
 
 	if (SUPPORT_SCYTHES) then
@@ -727,9 +769,11 @@ local function InitKeybindButtons(self)
 	end
 	tools_back:MoveToBack()
 	
-	equip_back = self:AddChild(Image("images/basic_back.xml","equip_back.tex"))
-	equip_back:SetPosition(-1300,90,0)	--equip_back:SetPosition(460+158-42+offset_archery,170+(67*VERTICAL_OFFSET),0)
+	equip_back = self:AddChild(Image("images/ui_panel_2x8.xml","ui_panel_2x8.tex"))
+	equip_back:SetPosition(-1230,145,0)	--equip_back:SetPosition(460+158-42+offset_archery,170+(67*VERTICAL_OFFSET),0)
+	equip_back:SetRotation(90)
 	equip_back:MoveToFront()
+	
 	
 	supergodmode_button = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
 	supergodmode_button:SetPosition(-1420,80,0)
@@ -750,6 +794,15 @@ local function InitKeybindButtons(self)
 	creativemode_button:SetPosition(-1180,80,0)
 	creativemode_button:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname]["receivecommand"], commands.creativemode) end)
 	creativemode_button:MoveToFront()
+	
+	
+	for k,cmd in ipairs(command_list) do
+		command_button[k] = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+		command_button[k]:SetPosition(cmd.pos.x, cmd.pos.y, cmd.pos.z)
+		command_button[k]:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname]["receivecommand"], cmd.command_string) end)
+		command_button[k]:MoveToFront()
+	end
+	
 	
 	if (DISABLE_BUTTONS) then
 		tools_back:Hide()
