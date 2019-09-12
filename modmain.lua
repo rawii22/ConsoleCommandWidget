@@ -124,8 +124,8 @@ local command_list = {
 		command_string = commands.nextphase,
 		tooltip = "Next Phase",
 		pos = slotPos[3],
-		image = "blank_season_yellow.tex",
-		atlas = "images/customisation.xml",
+		image = "nextphase.tex",
+		atlas = "images/customisation2.xml",
 		scale = .55
 	},
 	{
@@ -155,37 +155,45 @@ local command_list = {
 		command_string = commands.resetsanity,
 		tooltip = "Reset Sanity",
 		pos = slotPos[7],
-		image = ""------------------------------------Put image in dontstarvestuff here
+		image = "nightmarefuel.tex"
 	},
 	{
 		command_string = commands.speedmult1,
 		tooltip = "Speed 1",
 		pos = slotPos[8],
-		image = ""
+		image = "blank_grassy_1.tex",
+		atlas = "images/customisation2.xml",
+		scale = .55
 	},
 	{
 		command_string = commands.speedmult4,
 		tooltip = "Speed 4",
 		pos = slotPos[9],
-		image = ""
+		image = "blank_world_4.tex",
+		atlas = "images/customisation2.xml",
+		scale = .55
 	},
 	{
 		command_string = commands.speedmult35,
 		tooltip = "Speed 35",
 		pos = slotPos[10],
-		image = ""
+		image = "blank_season_red_35.tex",
+		atlas = "images/customisation2.xml",
+		scale = .55
 	},
 	{
 		command_string = commands.save,
 		tooltip = "Save",
 		pos = slotPos[11],
-		image = "researchlab.tex"
+		image = "blank_season_yellow_save.tex",
+		atlas = "images/customisation2.xml",
+		scale = .55
 	},
 	{
 		command_string = commands.revealmapallplayers,
 		tooltip = "Reveal Map - All Players",
 		pos = slotPos[12],
-		image = "world_maps.tex",
+		image = "world_map.tex",
 		atlas = "images/customisation.xml",
 		scale = .55
 	},
@@ -193,13 +201,17 @@ local command_list = {
 		command_string = "",
 		tooltip = "Custom 1",
 		pos = slotPos[13],
-		image = ""
+		image = "custom1.tex",
+		atlas = "images/customisation2.xml",
+		scale = .55
 	},
 	{
 		command_string = "",
 		tooltip = "Custom 2",
 		pos = slotPos[14],
-		image = ""
+		image = "custom2.tex",
+		atlas = "images/customisation2.xml",
+		scale = .55
 	},
 }
 
@@ -210,6 +222,8 @@ Assets = {
 	Asset("IMAGE", "images/button_large.tex"),
 	Asset("ATLAS", "images/ui_panel_2x8.xml"),
 	Asset("IMAGE", "images/ui_panel_2x8.tex"),
+	Asset("ATLAS", "images/customisation2.xml"),
+	Asset("IMAGE", "images/customisation2.tex"),
 	Asset("ATLAS", "images/customisation.xml"),
 	Asset("IMAGE", "images/customisation.tex"),
 }
