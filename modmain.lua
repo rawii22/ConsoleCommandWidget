@@ -107,26 +107,24 @@ local command_icon = {}
 local command_button = {}
 local command_list = {
 	{
-		command_string = commands.reset,
-		tooltip = "Reset",
-		pos = slotPos[1],
-		image = "world_start.tex",
-		atlas = "images/customisation.xml",
-		scale = .55
-	},
-	{
 		command_string = commands.supergodmode,
 		tooltip = "Super God Mode",
-		pos = slotPos[2],
+		pos = slotPos[1],
 		image = "reviver.tex"
 	},
 	{
 		command_string = commands.nextphase,
 		tooltip = "Next Phase",
-		pos = slotPos[3],
+		pos = slotPos[2],
 		image = "nextphase.tex",
 		atlas = "images/customisation2.xml",
 		scale = .55
+	},
+	{
+		command_string = commands.creativemode,
+		tooltip = "Creative Mode",
+		pos = slotPos[3],
+		image = "researchlab2.tex"
 	},
 	{
 		command_string = "",
@@ -138,18 +136,20 @@ local command_list = {
 		rpcName = "togglerain"
 	},
 	{
+		command_string = commands.revealmapallplayers,
+		tooltip = "Reveal Map - All Players",
+		pos = slotPos[5],
+		image = "world_map.tex",
+		atlas = "images/customisation.xml",
+		scale = .55
+	},
+	{
 		command_string = commands.setautumn,
 		tooltip = "Start Autumn",
-		pos = slotPos[5],
+		pos = slotPos[6],
 		image = "autumn.tex",
 		atlas = "images/customisation.xml",
 		scale = .55,
-	},
-	{
-		command_string = commands.creativemode,
-		tooltip = "Creative Mode",
-		pos = slotPos[6],
-		image = "researchlab2.tex"
 	},
 	{
 		command_string = commands.resetsanity,
@@ -190,10 +190,10 @@ local command_list = {
 		scale = .55
 	},
 	{
-		command_string = commands.revealmapallplayers,
-		tooltip = "Reveal Map - All Players",
+		command_string = commands.reset,
+		tooltip = "Reset",
 		pos = slotPos[12],
-		image = "world_map.tex",
+		image = "world_start.tex",
 		atlas = "images/customisation.xml",
 		scale = .55
 	},
