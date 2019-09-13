@@ -154,7 +154,9 @@ local command_list = {
 		command_string = commands.resetsanity,
 		tooltip = "Reset Sanity",
 		pos = slotPos[7],
-		image = "nightmarefuel.tex"
+		image = "brain.tex",
+		atlas = "images/customisation2.xml",
+		scale = .55
 	},
 	{
 		command_string = commands.speedmult1,
