@@ -1,18 +1,32 @@
 name = "Console Command Shortcuts"
-version = "1.0"
-description = "Adds buttons to the screen for common commands.\nIceGrog IceGrog IceGrog IceGrog IceGrog, WITHOUT HIM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
 author = "rawii22 & lord_of_les_ralph"--"IceGrog"
-forumthread = ""
+description = "Adds buttons to the screen for common commands.\nIceGrog IceGrog IceGrog IceGrog IceGrog, WITHOUT HIM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
+version = "1.0"
+version_compatible = "1.0"
 icon = "modicon.tex"
 icon_atlas = "modicon.xml"
+forumthread = ""
 
 api_version = 10
+api_version_dst = 10
+--priority = 5
 
-dont_starve_compatible = true
-reign_of_giants_compatible = true
-all_clients_require_mod = false
+dont_starve_compatible = false
+reign_of_giants_compatible = false
+shipwrecked_compatible = false
 dst_compatible = true
+all_clients_require_mod = false
 client_only_mod = true
+
+server_filter_tags = {
+	"console",
+    "commands",
+    "console commands",
+    "console widget",
+    "command widget",
+	"console shortcuts",
+	"command shortcuts",
+}
 
 
 local keyslist = {}
