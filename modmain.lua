@@ -440,7 +440,12 @@ end
    RPC Handlers
 ==================
 --]]
-AddModRPCHandler(modname, "receivecommand", function(player, commandString) GLOBAL.ExecuteConsoleCommand(commandString) end)
+AddModRPCHandler(modname, "receivecommand", function(player, commandString)
+	originalPlayer = GLOBAL.ThePlayer
+	GLOBAL.ThePlayer = player
+	GLOBAL.ExecuteConsoleCommand(commandString)
+	GLOBAL.ThePlayer = originalPlayer
+end)
 AddModRPCHandler(modname, "togglerain", function(player)
 	if GLOBAL.TheWorld.state.israining or GLOBAL.TheWorld.state.issnowing then
 		GLOBAL.TheWorld:PushEvent("ms_forceprecipitation", false)
