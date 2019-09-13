@@ -1,6 +1,6 @@
 name = "Console Command Shortcuts"
-version = "1.15"
-description = "Adds buttons to the screen for common commands"
+version = "1.0"
+description = "Adds buttons to the screen for common commands.\nIceGrog IceGrog IceGrog IceGrog IceGrog, WITHOUT HIM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
 author = "rawii22 & lord_of_les_ralph"--"IceGrog"
 forumthread = ""
 icon = "modicon.tex"
@@ -39,66 +39,6 @@ end
 
 configuration_options = {
   {
-    name = "Key_Axe",
-    label = "Axe's Keybind",
-    default = "1",
-    options = keyslist
-  },
-  {
-    name = "Key_Pickaxe",
-    label = "Pickaxe's Keybind",
-    default = "2",
-    options = keyslist
-  },
-  {
-    name = "Key_Shovel",
-    label = "Shovel's Keybind",
-    default = "3",
-    options = keyslist
-  },
-  {
-    name = "Key_Hammer",
-    label = "Hammer's Keybind",
-    default = "4",
-    options = keyslist
-  },
-  {
-    name = "Key_Pitchfork",
-    label = "Pitchfork's Keybind",
-    default = "5",
-    options = keyslist
-  },
-  {
-    name = "Key_Light",
-    label = "Light Source's Keybind",
-    default = "T",
-    options = keyslist
-  },
-  {
-    name = "Key_Cane",
-    label = "Walking Cane's Keybind",
-    default = "H",
-    options = keyslist
-  },
-  {
-    name = "Key_Weapon",
-    label = "Weapon's Keybind",
-    default = "G",
-    options = keyslist
-  },
-  {
-    name = "Key_Armor",
-    label = "Armor's Keybind",
-    default = "C",
-    options = keyslist
-  },
-  {
-    name = "Key_Helmet",
-    label = "Helmet's Keybind",
-    default = "V",
-    options = keyslist
-  },
-  {
     name = "Letters",
     label = "Letters on Buttons",
     default = false,
@@ -124,41 +64,5 @@ configuration_options = {
 		{description = "NO", data = false},
 		{description = "YES", data = true}
 	}
-  },
-  {
-    name = "Support_Archery",
-    label = "Support Archery Mod",
-    default = false,
-    options = {
-		{description = "NO", data = false},
-		{description = "YES", data = true}
-	}
-  },
-  {
-    name = "Support_Scythes",
-    label = "Support Scythes Mod",
-    default = false,
-    options = {
-		{description = "NO", data = false},
-		{description = "YES", data = true}
-	}
-  },
-  {
-    name = "Key_Scythe",
-    label = "Scythe's Keybind",
-    default = false,
-    options = keyslist
-  },
-  {
-    name = "Vertical_Offset",
-    label = "Vertical Offset",
-    default = 0,
-    options = numbers
-  },
-  {
-    name = "Key_Refresh",
-    label = "Refresh Key",
-    default = false,
-    options = keyslist
-  },
+  }
 }

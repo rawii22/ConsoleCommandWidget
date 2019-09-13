@@ -11,11 +11,6 @@ local KEY_CANE = GetModConfigData("Key_Cane")
 local LETTERS = GetModConfigData("Letters")
 local DISABLE_KEYS = GetModConfigData("Disable_Keys")
 local DISABLE_BUTTONS = GetModConfigData("Disable_Buttons")
-local SUPPORT_ARCHERY = GetModConfigData("Support_Archery")
-local SUPPORT_SCYTHES = GetModConfigData("Support_Scythes")
-local KEY_SCYTHE = GetModConfigData("Key_Scythe")
-local VERTICAL_OFFSET = GetModConfigData("Vertical_Offset")
-local KEY_REFRESH = GetModConfigData("Key_Refresh")
 
 local KEYS = {
 	KEY_WEAPON,
@@ -80,7 +75,7 @@ local commands = {
 	--stoprain = "TheWorld:PushEvent(\"ms_forceprecipitation\", false)",
 	--startrain = "TheWorld:PushEvent(\"ms_forceprecipitation\", true)", refer to bottom of file
 	supergodmode = "c_supergodmode()",
-	creativemode = "GetPlayer().components.builder:GiveAllRecipes()",
+	creativemode = "ThePlayer.components.builder:GiveAllRecipes()",
 	reset = "c_reset()",
 	resetsanity = "AllPlayers[1].components.sanity:SetPercent(1)",
 	speedmult1 = "c_speedmult(1)",
@@ -110,7 +105,8 @@ local command_list = {
 		command_string = commands.supergodmode,
 		tooltip = "Super God Mode",
 		pos = slotPos[1],
-		image = "reviver.tex"
+		image = "reviver.tex",
+		keybind = "c"
 	},
 	{
 		command_string = commands.nextphase,
@@ -118,13 +114,15 @@ local command_list = {
 		pos = slotPos[2],
 		image = "nextphase.tex",
 		atlas = "images/customisation2.xml",
-		scale = .55
+		scale = .55,
+		keybind = "v"
 	},
 	{
 		command_string = commands.creativemode,
 		tooltip = "Creative Mode",
 		pos = slotPos[3],
-		image = "researchlab2.tex"
+		image = "researchlab2.tex",
+		keybind = "b"
 	},
 	{
 		command_string = "",
@@ -133,7 +131,8 @@ local command_list = {
 		image = "rain.tex",
 		atlas = "images/customisation.xml",
 		scale = .55,
-		rpcName = "togglerain"
+		rpcName = "togglerain",
+		keybind = "n"
 	},
 	{
 		command_string = commands.revealmapallplayers,
@@ -203,7 +202,8 @@ local command_list = {
 		pos = slotPos[13],
 		image = "custom1.tex",
 		atlas = "images/customisation2.xml",
-		scale = .55
+		scale = .55,
+		keybind = ","
 	},
 	{
 		command_string = "",
@@ -211,7 +211,8 @@ local command_list = {
 		pos = slotPos[14],
 		image = "custom2.tex",
 		atlas = "images/customisation2.xml",
-		scale = .55
+		scale = .55,
+		keybind = "."
 	},
 }
 
@@ -304,16 +305,6 @@ TheNet:GetClientTable()[playerNumber].admin
 ===========================
 --]]
 local function InitKeybindButtons(self)
-
-	if (SUPPORT_SCYTHES) then
-		tools_back = self:AddChild(Image("images/basic_back.xml","tools_back_ship.tex"))
-		tools_back:SetPosition(-67+offset_archery,170+(67*VERTICAL_OFFSET),0)
-	else
-		tools_back = self:AddChild(Image("images/basic_back.xml","tools_back.tex"))
-		tools_back:SetPosition(-34+offset_archery,170+(67*VERTICAL_OFFSET),0)
-	end
-	tools_back:MoveToBack()
-	
 	equip_back = self:AddChild(Image("images/ui_panel_2x8.xml","ui_panel_2x8.tex"))
 	equip_back:SetPosition(-1230,145,0)	--equip_back:SetPosition(460+158-42+offset_archery,170+(67*VERTICAL_OFFSET),0)
 	equip_back:SetRotation(90)
@@ -329,36 +320,35 @@ local function InitKeybindButtons(self)
 		command_button[k]:MoveToFront()
 		command_button[k]:SetHoverText(cmd.tooltip, {offset_y = 80})
 		
+		-- Create key shortcuts
+		if not DISABLE_KEYS and cmd.keybind ~= nil then
+			GLOBAL.TheInput:AddKeyUpHandler(
+				cmd.keybind:lower():byte(), 
+				function()
+					if not GLOBAL.IsPaused() and IsDefaultScreen() then
+						SendModRPCToServer(MOD_RPC[modname][rpcName], cmd.command_string)
+					end
+				end
+			)
+		end
+		
 		-- Create icons
 		local atlas = cmd.atlas or "images/inventoryimages.xml"
 		command_icon[k] = Image(atlas, cmd.image)
 		local scale = cmd.scale or 1
 		command_icon[k]:SetScale(scale)
 		command_button[k]:AddChild(command_icon[k])
-	end
-	
-	
-	if (DISABLE_BUTTONS) then
-		tools_back:Hide()
-		equip_back:Hide()
-	end
-	
-	for i=1, cantButtons do
-		icon_button[i] = nil
-		actual_item[i] = nil
-	end
-	AddKeybindButton(self,1)
-	AddKeybindButton(self,2)
-	AddKeybindButton(self,3)
-	AddKeybindButton(self,4)
-	AddKeybindButton(self,5)
-	AddKeybindButton(self,6)
-	AddKeybindButton(self,7)
-	AddKeybindButton(self,8)
-	AddKeybindButton(self,9)
-	AddKeybindButton(self,10)
-	if (SUPPORT_SCYTHES) then
-		AddKeybindButton(self,11)
+		
+				
+		if (LETTERS and cmd.keybind ~= nil) then
+			letter[k] = command_button[k]:AddChild(Button())
+			letter[k]:SetText(cmd.keybind)
+			letter[k]:SetFont("stint-ucr")
+			letter[k]:SetTextColour(1,1,1,1)
+			letter[k]:SetTextFocusColour(1,1,1,1)
+			letter[k]:SetTextSize(50)
+			letter[k]:MoveToFront()
+		end
 	end
 	
 	finish_init = true
@@ -384,14 +374,14 @@ end
    Input Handlers
 ====================
 --]]
-local function IsDefaultScreen()
+function IsDefaultScreen()
 	if GLOBAL.TheFrontEnd:GetActiveScreen() and GLOBAL.TheFrontEnd:GetActiveScreen().name and type(GLOBAL.TheFrontEnd:GetActiveScreen().name) == "string" and GLOBAL.TheFrontEnd:GetActiveScreen().name == "HUD" then
 		return true
 	else
 		return false
 	end
 end
-
+--[[
 if (not DISABLE_KEYS) then
 	for i,key in pairs(KEYS) do
 		if (key ~= false) then
@@ -405,18 +395,19 @@ if (not DISABLE_KEYS) then
 			)
 		end
 	end
-end
+end]]
 
+--[[
 if (KEY_REFRESH ~= false) then
 	GLOBAL.TheInput:AddKeyUpHandler(
 		KEY_REFRESH:lower():byte(), 
 		function()
 			if not GLOBAL.IsPaused() and IsDefaultScreen() then
-				CheckAllButtonItem()
+				--CheckAllButtonItem()
 			end
 		end
 	)
-end
+end]]
 
 
 --[[
