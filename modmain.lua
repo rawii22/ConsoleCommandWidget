@@ -317,6 +317,18 @@ local function InitKeybindButtons(self)
 		command_button[k]:SetPosition(cmd.pos.x, cmd.pos.y, cmd.pos.z)
 		local rpcName = cmd.rpcName or "receivecommand"
 		command_button[k]:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname][rpcName], cmd.command_string) end)
+		command_button[k].ongainfocus = function(isEnabled)
+			local self = command_button[k]
+			if isEnabled and not self.selected then
+				self:SetScale(1.2)
+			end
+		end
+		command_button[k].onlosefocus = function(isEnabled)
+			local self = command_button[k]
+			if isEnabled and not self.selected then
+				self:SetScale(1)
+			end
+		end
 		command_button[k]:MoveToFront()
 		command_button[k]:SetHoverText(cmd.tooltip, {offset_y = 80})
 		
