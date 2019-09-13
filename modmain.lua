@@ -409,9 +409,8 @@ if (not DISABLE_KEYS) then
 			)
 		end
 	end
-end]]
+end
 
---[[
 if (KEY_REFRESH ~= false) then
 	GLOBAL.TheInput:AddKeyUpHandler(
 		KEY_REFRESH:lower():byte(), 
@@ -422,6 +421,18 @@ if (KEY_REFRESH ~= false) then
 		end
 	)
 end]]
+
+local removekey = "r"
+if not DISABLE_KEYS then
+	GLOBAL.TheInput:AddKeyUpHandler(
+		removekey:lower():byte(), 
+		function()
+			if not GLOBAL.IsPaused() and IsDefaultScreen() then
+				SendModRPCToServer(MOD_RPC[modname]["receivecommand"], "c_select():Remove()")
+			end
+		end
+	)
+end
 
 
 --[[
