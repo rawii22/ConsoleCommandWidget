@@ -1,6 +1,13 @@
 name = "Console Command Shortcuts"
 author = "rawii22 & lord_of_les_ralph"--"IceGrog"
-description = "Adds buttons to the screen for common commands.\nIceGrog IceGrog IceGrog IceGrog IceGrog, WITHOUT HIM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
+description = "Adds buttons to the screen for some common commands.\n\n"
++ "The following are the only bound commands:\n"
++ "   C : Super God Mode\n"
++ "   V : Next Phase\n"
++ "   B : Creative Mode\n"
++ "   N : Toggle Precipitation\n\n"
++ "Right-click custom buttons 1 & 2 (bound to ',' and '.') to type in whatever command your heart desires. Then hit Enter or Accept to bind the command.\n\n"
++ "IceGrog IceGrog IceGrog IceGrog IceGrog, WITHOUT HIM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
 version = "1.0"
 version_compatible = "1.0"
 icon = "modicon.tex"
@@ -28,32 +35,9 @@ server_filter_tags = {
 	"command shortcuts",
 }
 
-
-local keyslist = {}
-local string = ""
-
-local FIRST_NUMBER = 48
-for i = 1, 10 do
-	local ch = string.char(FIRST_NUMBER + i - 1)
-	keyslist[i] = {description = ch, data = ch}
-end
-
-local FIRST_LETTER = 65
-for i = 11, 36 do
-	local ch = string.char(FIRST_LETTER + i - 11)
-	keyslist[i] = {description = ch, data = ch}
-end
-
-keyslist[37] = {description = "DISABLED", data = false}
-
-numbers = {}
-for i = 0, 5 do
-	numbers[i+1] = {description = i, data = i}
-end
-
 configuration_options = {
   {
-    name = "Letters",
+    name = "LETTERS",
     label = "Letters on Buttons",
     default = false,
     options = {
@@ -62,17 +46,8 @@ configuration_options = {
 	}
   },
   {
-    name = "Disable_Keys",
+    name = "DISABLE_KEYS",
     label = "Disable Keybinds",
-    default = false,
-    options = {
-		{description = "NO", data = false},
-		{description = "YES", data = true}
-	}
-  },
-  {
-    name = "Disable_Buttons",
-    label = "Disable Buttons",
     default = false,
     options = {
 		{description = "NO", data = false},
