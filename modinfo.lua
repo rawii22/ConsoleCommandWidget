@@ -7,9 +7,9 @@ description = "Adds buttons to the screen for some common commands.\n\n"
 .."   B : Creative Mode\n"
 .."   N : Toggle Precipitation\n\n"
 .."Right-click custom buttons 1 & 2 (bound to ',' and '.') to type in whatever command your heart desires. Then hit Enter or Accept to bind the command.\n\n"
-.."IceGrog IceGrog IceGrog IceGrog IceGrog, WITHOUT HIM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
-version = "1.0"
-version_compatible = "1.0"
+.."IceGrog & squeek IceGrog & squeek, WITHOUT THEM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
+version = "1.2"
+version_compatible = "1.1"
 icon = "modicon.tex"
 icon_atlas = "modicon.xml"
 forumthread = ""
@@ -22,8 +22,8 @@ dont_starve_compatible = false
 reign_of_giants_compatible = false
 shipwrecked_compatible = false
 dst_compatible = true
-all_clients_require_mod = false
-client_only_mod = true
+all_clients_require_mod = true
+client_only_mod = false
 
 server_filter_tags = {
 	"console",

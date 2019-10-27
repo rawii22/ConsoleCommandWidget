@@ -28,6 +28,7 @@ local LETTERS = GetModConfigData("LETTERS")
 local DISABLE_KEYS = GetModConfigData("DISABLE_KEYS")
 local CONTROL_LEFT_MOUSE = GLOBAL.CONTROL_ACCEPT  --29
 local CONTROL_RIGHT_MOUSE = 1
+local BUTTON_SPACING = 47
 
 local Player
 local SignGenerator = GLOBAL.require("signgenerator")
@@ -36,7 +37,16 @@ local Image = GLOBAL.require("widgets/image")
 local ImageButton = GLOBAL.require("widgets/imagebutton")
 local Button = GLOBAL.require("widgets/button")
 
-local modname = "ConsoleCommandWidget";
+local dir_vert = -2
+local dir_horiz = -1
+local anchor_vert = 1
+local anchor_horiz = 1
+local margin_dir_vert = 1
+local margin_dir_horiz = 1
+local margin_size_x = 0
+local margin_size_y = 0
+
+local modname = "ConsoleCommandWidget"
 
 local commands = {
 	nextphase = "TheWorld:PushEvent(\"ms_nextphase\")",
@@ -54,16 +64,42 @@ local commands = {
 	save = "c_save()",
 }
 
-local xDim = 7
-local yDim = 2
-local baseSlotPos = { x = -1450, y = 180 }
-local slotPos = {}
+local function PositionPanel(controls, screensize, background, command_button)
+	local hudscale = controls.top_root:GetScale()
+	local screenw_full, screenh_full = GLOBAL.unpack(screensize)
+	local screenw = screenw_full/hudscale.x
+	local screenh = screenh_full/hudscale.y
+	local background_h, background_w = background:GetSize()
+	background_h = background_h * .63 --scaled the same as defined in InitButtons
+	background_w = background_w * .63
+	local xDim = 7 --columns
+	local yDim = 2 --rows
+	local slotPos = {}
+	
+	if screenw < 1820 then --1820, 80, and 70 were determined visually (magic numbers)
+		margin_size_x = 80
+		margin_size_y = 70
+	else
+		margin_size_x = 0
+		margin_size_y = 0
+	end
+	background:SetPosition(
+		(anchor_horiz*background_w/2)+(dir_horiz*screenw/2)+(margin_dir_horiz*margin_size_x), 
+		(anchor_vert*background_h/2)+(dir_vert*screenh/2)+(margin_dir_vert*margin_size_y), 
+		0
+	)
+	
+	--goes through each button and generates its position based on the background's position
+	for y = 0, (yDim-1) do
+		for x = 0, (xDim-1) do
+			--47 here determines the spacing of the buttons. Also determined visually
+			table.insert(slotPos, GLOBAL.Vector3(background:GetPosition().x + BUTTON_SPACING * x, background:GetPosition().y - BUTTON_SPACING * y, 0))
+		end
+	end
 
-for y = 0, (yDim-1) do
-    for x = 0, (xDim-1) do
-		-- size of inventory square is < 75
-        table.insert(slotPos, GLOBAL.Vector3(baseSlotPos.x + 75 * x, baseSlotPos.y - 75 * y, 0))
-    end
+	for k, button in pairs(command_button) do
+		button:SetPosition(slotPos[k].x - BUTTON_SPACING * 3 + 3, slotPos[k].y + BUTTON_SPACING / 2 - 3, 0)
+	end
 end
 
 local background = {}
@@ -74,31 +110,27 @@ local command_button_alt = {}
 local command_list = {
 	{
 		command_string = commands.supergodmode,
-		tooltip = "Super God Mode",
-		pos = slotPos[1],
+		tooltip = "Super God",
 		image = "reviver.tex",
 		keybind = "c"
 	},
 	{
 		command_string = commands.nextphase,
 		tooltip = "Next Phase",
-		pos = slotPos[2],
 		image = "nextphase.tex",
 		atlas = "images/customisation2.xml",
-		scale = .55,
+		scale = .55, --scale of the image on the button
 		keybind = "v"
 	},
 	{
 		command_string = commands.creativemode,
 		tooltip = "Creative Mode",
-		pos = slotPos[3],
 		image = "researchlab2.tex",
 		keybind = "b"
 	},
 	{
 		command_string = "",
 		tooltip = "Toggle Rain",
-		pos = slotPos[4],
 		image = "rain.tex",
 		atlas = "images/customisation.xml",
 		scale = .55,
@@ -108,7 +140,6 @@ local command_list = {
 	{
 		command_string = commands.revealmapallplayers,
 		tooltip = "Reveal Map - All Players",
-		pos = slotPos[5],
 		image = "world_map.tex",
 		atlas = "images/customisation.xml",
 		scale = .55
@@ -116,7 +147,6 @@ local command_list = {
 	{
 		command_string = commands.setautumn,
 		tooltip = "Start Autumn",
-		pos = slotPos[6],
 		image = "autumn.tex",
 		atlas = "images/customisation.xml",
 		scale = .55,
@@ -124,7 +154,6 @@ local command_list = {
 	{
 		command_string = commands.resetsanity,
 		tooltip = "Reset Sanity",
-		pos = slotPos[7],
 		image = "brain.tex",
 		atlas = "images/customisation2.xml",
 		scale = .55
@@ -132,7 +161,6 @@ local command_list = {
 	{
 		command_string = commands.speedmult1,
 		tooltip = "Speed 1",
-		pos = slotPos[8],
 		image = "blank_grassy_1.tex",
 		atlas = "images/customisation2.xml",
 		scale = .55
@@ -140,7 +168,6 @@ local command_list = {
 	{
 		command_string = commands.speedmult4,
 		tooltip = "Speed 4",
-		pos = slotPos[9],
 		image = "blank_world_4.tex",
 		atlas = "images/customisation2.xml",
 		scale = .55
@@ -148,7 +175,6 @@ local command_list = {
 	{
 		command_string = commands.speedmult35,
 		tooltip = "Speed 35",
-		pos = slotPos[10],
 		image = "blank_season_red_35.tex",
 		atlas = "images/customisation2.xml",
 		scale = .55
@@ -156,7 +182,6 @@ local command_list = {
 	{
 		command_string = commands.save,
 		tooltip = "Save",
-		pos = slotPos[11],
 		image = "blank_season_yellow_save.tex",
 		atlas = "images/customisation2.xml",
 		scale = .55
@@ -164,7 +189,6 @@ local command_list = {
 	{
 		command_string = commands.reset,
 		tooltip = "Reset",
-		pos = slotPos[12],
 		image = "world_start.tex",
 		atlas = "images/customisation.xml",
 		scale = .55
@@ -172,7 +196,6 @@ local command_list = {
 	{
 		command_string = "",
 		tooltip = "Custom 1",
-		pos = slotPos[13],
 		image = "custom1.tex",
 		atlas = "images/customisation2.xml",
 		scale = .55,
@@ -182,7 +205,6 @@ local command_list = {
 	{
 		command_string = "",
 		tooltip = "Custom 2",
-		pos = slotPos[14],
 		image = "custom2.tex",
 		atlas = "images/customisation2.xml",
 		scale = .55,
@@ -191,7 +213,7 @@ local command_list = {
 	},
 }
 
-local raw_custom_command = {}
+local raw_custom_command = {"", ""}
 local writeable_screen = {}
 local writeable_data = {
     prompt = GLOBAL.STRINGS.SIGNS.MENU.PROMPT,
@@ -232,32 +254,33 @@ TheNet:GetClientTable()[playerNumber].admin
    Class Post-Constructs
 ===========================
 --]]
-local function InitKeybindButtons(self)
-	background = self:AddChild(Image("images/ui_panel_2x8.xml","ui_panel_2x8.tex"))
-	background:SetPosition(-1230,145,0)	--equip_back:SetPosition(460+158-42+offset_archery,170+(67*VERTICAL_OFFSET),0)
+local function InitButtons(controls)
+	background = controls.top_root:AddChild(Image("images/ui_panel_2x8.xml","ui_panel_2x8.tex"))
+	background:SetScale(.63)
 	background:SetRotation(90)
 	background:MoveToFront()
 	
-	
 	for k,cmd in ipairs(command_list) do
 		-- Create square buttons
-		command_button[k] = self:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
-		command_button[k]:SetPosition(cmd.pos.x, cmd.pos.y, cmd.pos.z)
+		command_button[k] = controls.top_root:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+		command_button[k]:SetScale(.6)
 		local rpcName = cmd.rpcName or "receivecommand"
 		command_button[k]:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname][rpcName], cmd.command_string) end)
+		-- Make the buttons bulge when hovered over
 		command_button[k].ongainfocus = function(isEnabled)
 			local self = command_button[k]
 			if isEnabled and not self.selected then
-				self:SetScale(1.2)
+				self:SetScale(.8)
 			end
 		end
 		command_button[k].onlosefocus = function(isEnabled)
 			local self = command_button[k]
 			if isEnabled and not self.selected then
-				self:SetScale(1)
+				self:SetScale(.6)
 			end
 		end
 		command_button[k]:MoveToFront()
+		-- Tooltip is created here
 		command_button[k]:SetHoverText(cmd.tooltip, {offset_y = 80})
 		
 		-- Create key shortcuts
@@ -294,14 +317,26 @@ local function InitKeybindButtons(self)
 		command_button[k].customcommandindex = cmd.customcommandindex or 0
 	end
 	
-	finish_init = true
+	--this next section was the key taken from squeek's minimap mod
+	local screensize = {GLOBAL.TheSim:GetScreenSize()}
+	PositionPanel(controls, screensize, background, command_button)
+	
+	local OnUpdate_base = controls.OnUpdate
+	controls.OnUpdate = function(self, dt)
+		OnUpdate_base(self, dt)
+		local curscreensize = {GLOBAL.TheSim:GetScreenSize()}
+		if curscreensize[1] ~= screensize[1] or curscreensize[2] ~= screensize[2] then --if the screen has changed, then reposition the panel
+			PositionPanel(controls, curscreensize, background, command_button)
+			screensize = curscreensize
+		end
+	end
 end
-AddClassPostConstruct("widgets/inventorybar", InitKeybindButtons)
+AddClassPostConstruct("widgets/controls", InitButtons)
 
 
 local function ShowWriteableWidget(index)
 	writeable_screen = GLOBAL.ThePlayer.HUD:ShowWriteableWidget(GLOBAL.ThePlayer, writeable_data)
-	writeable_screen:SetPosition(-1280, -780, 0)
+	--writeable_screen:SetPosition(0, 0, 0)
 	writeable_screen.customcommandindex = index		-- so widget can write command to proper location
 end
 local function CustomLeftClick(index)
@@ -329,6 +364,7 @@ AddClassPostConstruct("widgets/button", HandleLeftRightClickForCustomButtons)
    Global Functions
 ======================
 --]]
+--To manually set the custom command buttons
 function c_bindbutton(commandString, customButton)
 	if customButton >= 1 and customButton <= 2 then
 		local pos = customButton + 12
@@ -349,6 +385,7 @@ end
    Input Handlers
 ====================
 --]]
+--A useful button since the mod's purpose is convenience
 local removekey = "r"
 if not DISABLE_KEYS then
 	GLOBAL.TheInput:AddKeyUpHandler(
@@ -361,10 +398,9 @@ if not DISABLE_KEYS then
 	)
 end
 
-
 --[[
 ==================
-   RPC Handlers
+   RPC Handlers (since these commands require certain conditions to be known)
 ==================
 --]]
 AddModRPCHandler(modname, "receivecommand", function(player, commandString)
