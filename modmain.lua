@@ -26,6 +26,7 @@ Button:SetControl(ctrl)
 
 local LETTERS = GetModConfigData("LETTERS")
 local DISABLE_KEYS = GetModConfigData("DISABLE_KEYS")
+local ADMIN_ONLY = GetModConfigData("ADMIN_ONLY")
 local CONTROL_LEFT_MOUSE = GLOBAL.CONTROL_ACCEPT  --29
 local CONTROL_RIGHT_MOUSE = 1
 local BUTTON_SPACING = 47
@@ -36,6 +37,7 @@ local Widget = GLOBAL.require("widgets/widget")
 local Image = GLOBAL.require("widgets/image")
 local ImageButton = GLOBAL.require("widgets/imagebutton")
 local Button = GLOBAL.require("widgets/button")
+local io = GLOBAL.require("io")
 
 local dir_vert = -2
 local dir_horiz = -1
@@ -47,6 +49,7 @@ local margin_size_x = 0
 local margin_size_y = 0
 
 local modname = "ConsoleCommandWidget"
+local workshopID = "ConsoleCommandWidget(git)"--"workshop-1862534310"       --------------------change to workshopID for mod releases; DON"T FORGET!!!
 
 local commands = {
 	nextphase = "TheWorld:PushEvent(\"ms_nextphase\")",
@@ -188,7 +191,7 @@ local command_list = {
 	},
 	{
 		command_string = commands.reset,
-		tooltip = "Reset",
+		tooltip = "Reload",
 		image = "world_start.tex",
 		atlas = "images/customisation.xml",
 		scale = .55
@@ -226,7 +229,23 @@ local writeable_data = {
             widget:OverrideText( SignGenerator(inst, doer) )
         end, control = GLOBAL.CONTROL_MENU_MISC_2 },]]
     acceptbtn = { text = "Assign", cb = function(inst, doer, widget)
-		raw_custom_command[widget.customcommandindex] = widget:GetText()
+		raw_custom_command[widget.customcommandindex] = widget:GetText()-------------------------------------Add keyuphandler
+		if not DISABLE_KEYS then
+			local customElement
+			for k, v in ipairs(command_list) do
+				if v.customcommandindex == widget.customcommandindex then
+					customElement = v
+				end
+			end
+			GLOBAL.TheInput:AddKeyUpHandler(
+				customElement.keybind:lower():byte(), 
+				function()
+					if not GLOBAL.IsPaused() and IsDefaultScreen() then
+						SendModRPCToServer(MOD_RPC[modname]["receivecommand"], raw_custom_command[customElement.customcommandindex])
+					end
+				end
+			)
+		end
 	end, control = GLOBAL.CONTROL_ACCEPT },
 
     --defaulttext = SignGenerator,
@@ -255,89 +274,105 @@ TheNet:GetClientTable()[playerNumber].admin
 ===========================
 --]]
 local function InitButtons(controls)
-	background = controls.top_root:AddChild(Image("images/ui_panel_2x8.xml","ui_panel_2x8.tex"))
-	background:SetScale(.63)
-	background:SetRotation(90)
-	background:MoveToFront()
-	
-	for k,cmd in ipairs(command_list) do
-		-- Create square buttons
-		command_button[k] = controls.top_root:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
-		command_button[k]:SetScale(.6)
-		local rpcName = cmd.rpcName or "receivecommand"
-		command_button[k]:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname][rpcName], cmd.command_string) end)
-		-- Make the buttons bulge when hovered over
-		command_button[k].ongainfocus = function(isEnabled)
-			local self = command_button[k]
-			if isEnabled and not self.selected then
-				self:SetScale(.8)
-			end
+	local isAdmin = false
+	for k, v in pairs(GLOBAL.TheNet:GetClientTable()) do
+		if v.userid == GLOBAL.ThePlayer.userid and v.admin then
+			isAdmin = true
 		end
-		command_button[k].onlosefocus = function(isEnabled)
-			local self = command_button[k]
-			if isEnabled and not self.selected then
-				self:SetScale(.6)
-			end
-		end
-		command_button[k]:MoveToFront()
-		-- Tooltip is created here
-		command_button[k]:SetHoverText(cmd.tooltip, {offset_y = 80})
-		
-		-- Create key shortcuts
-		if not DISABLE_KEYS and cmd.keybind ~= nil then
-			GLOBAL.TheInput:AddKeyUpHandler(
-				cmd.keybind:lower():byte(), 
-				function()
-					if not GLOBAL.IsPaused() and IsDefaultScreen() then
-						SendModRPCToServer(MOD_RPC[modname][rpcName], cmd.command_string)
-					end
-				end
-			)
-		end
-		
-		-- Create icons
-		local atlas = cmd.atlas or "images/inventoryimages.xml"
-		command_icon[k] = Image(atlas, cmd.image)
-		local scale = cmd.scale or 1
-		command_icon[k]:SetScale(scale)
-		command_button[k]:AddChild(command_icon[k])
-		
-		-- Create keybind letters on buttons
-		if (LETTERS and cmd.keybind ~= nil) then
-			letter[k] = command_button[k]:AddChild(Button())
-			letter[k]:SetText(cmd.keybind)
-			letter[k]:SetFont("stint-ucr")
-			letter[k]:SetTextColour(1,1,1,1)
-			letter[k]:SetTextFocusColour(0.7,0.7,0.7,1)
-			letter[k]:SetTextSize(50)
-			letter[k]:MoveToFront()
-		end
-		
-		-- Identify custom buttons
-		command_button[k].customcommandindex = cmd.customcommandindex or 0
 	end
-	
-	--this next section was the key taken from squeek's minimap mod
-	local screensize = {GLOBAL.TheSim:GetScreenSize()}
-	PositionPanel(controls, screensize, background, command_button)
-	
-	local OnUpdate_base = controls.OnUpdate
-	controls.OnUpdate = function(self, dt)
-		OnUpdate_base(self, dt)
-		local curscreensize = {GLOBAL.TheSim:GetScreenSize()}
-		if curscreensize[1] ~= screensize[1] or curscreensize[2] ~= screensize[2] then --if the screen has changed, then reposition the panel
-			PositionPanel(controls, curscreensize, background, command_button)
-			screensize = curscreensize
+	--A custom way of adding admins to the game who can access the widget
+	for line in io.lines("../mods/"..workshopID.."/adminlist.txt") do
+		print(line)
+		if GLOBAL.ThePlayer.userid == line then
+			isAdmin = true
+		end
+	end
+		
+	if isAdmin or not ADMIN_ONLY then
+		background = controls.top_root:AddChild(Image("images/ui_panel_2x8.xml","ui_panel_2x8.tex"))
+		background:SetScale(.63)
+		background:SetRotation(90)
+		background:MoveToFront()
+		
+		for k,cmd in ipairs(command_list) do
+			-- Create square buttons
+			command_button[k] = controls.top_root:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+			command_button[k]:SetScale(.6)
+			local rpcName = cmd.rpcName or "receivecommand"
+			command_button[k]:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname][rpcName], cmd.command_string) end)
+			-- Make the buttons bulge when hovered over
+			command_button[k].ongainfocus = function(isEnabled)
+				local self = command_button[k]
+				if isEnabled and not self.selected then
+					self:SetScale(.8)
+				end
+			end
+			command_button[k].onlosefocus = function(isEnabled)
+				local self = command_button[k]
+				if isEnabled and not self.selected then
+					self:SetScale(.6)
+				end
+			end
+			command_button[k]:MoveToFront()
+			-- Tooltip is created here
+			command_button[k]:SetHoverText(cmd.tooltip, {offset_y = 80})
+			
+			-- Create key shortcuts
+			if not DISABLE_KEYS and cmd.keybind ~= nil then
+				GLOBAL.TheInput:AddKeyUpHandler(
+					cmd.keybind:lower():byte(), 
+					function()
+						if not GLOBAL.IsPaused() and IsDefaultScreen() then
+							SendModRPCToServer(MOD_RPC[modname][rpcName], cmd.command_string)
+						end
+					end
+				)
+			end
+			
+			-- Create icons
+			local atlas = cmd.atlas or "images/inventoryimages.xml"
+			command_icon[k] = Image(atlas, cmd.image)
+			local scale = cmd.scale or 1
+			command_icon[k]:SetScale(scale)
+			command_button[k]:AddChild(command_icon[k])
+			
+			-- Create keybind letters on buttons
+			if (LETTERS and cmd.keybind ~= nil) then
+				letter[k] = command_button[k]:AddChild(Button())
+				letter[k]:SetText(cmd.keybind)
+				letter[k]:SetFont("stint-ucr")
+				letter[k]:SetTextColour(1,1,1,1)
+				letter[k]:SetTextFocusColour(0.7,0.7,0.7,1)
+				letter[k]:SetTextSize(50)
+				letter[k]:MoveToFront()
+			end
+			
+			-- Identify custom buttons
+			command_button[k].customcommandindex = cmd.customcommandindex or 0
+		end
+		
+		--this next section was the key taken from squeek's minimap mod
+		local screensize = {GLOBAL.TheSim:GetScreenSize()}
+		PositionPanel(controls, screensize, background, command_button)
+		
+		local OnUpdate_base = controls.OnUpdate
+		controls.OnUpdate = function(self, dt)
+			OnUpdate_base(self, dt)
+			local curscreensize = {GLOBAL.TheSim:GetScreenSize()}
+			if curscreensize[1] ~= screensize[1] or curscreensize[2] ~= screensize[2] then --if the screen has changed, then reposition the panel
+				PositionPanel(controls, curscreensize, background, command_button)
+				screensize = curscreensize
+			end
 		end
 	end
 end
 AddClassPostConstruct("widgets/controls", InitButtons)
 
-
 local function ShowWriteableWidget(index)
 	writeable_screen = GLOBAL.ThePlayer.HUD:ShowWriteableWidget(GLOBAL.ThePlayer, writeable_data)
 	--writeable_screen:SetPosition(0, 0, 0)
 	writeable_screen.customcommandindex = index		-- so widget can write command to proper location
+	writeable_screen:OverrideText(raw_custom_command[index])
 end
 local function CustomLeftClick(index)
 	SendModRPCToServer(MOD_RPC[modname]["receivecommand"], raw_custom_command[index])

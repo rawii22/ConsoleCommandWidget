@@ -1,0 +1,9 @@
+--To find out someone's userid, look at the game log file at
+--C:\Users\[username]\Documents\Klei\DoNotStarveTogether\client_log.txt
+--When a player joins, the line in the log will look like this:
+--[00:02:43]: Client authenticated: (KU_KozvIklj)
+--The string at the very end (without the parentheses) is the userid. This will usually be followed by
+--their username. You can search for it using ctrl + f. Then all you have to do is paste it anywhere
+--below this message and it must be the only text on that line. (without the -- before it).
+--DO NOT put any spaces or empty rows/lines before or after the userid(s). Put them immediately
+--under this line.

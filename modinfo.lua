@@ -1,14 +1,15 @@
-name = "Console Command Shortcuts"
+name = "Console Command Shortcuts(git)"
 author = "rawii22 & lord_of_les_ralph"--"IceGrog"
-description = "Adds buttons to the screen for some common commands.\n\n"
+description = "Adds buttons to the screen for some common commands. Check configurations for giving access to players.\n"
 .."The following are the only bound commands:\n"
 .."   C : Super God Mode\n"
 .."   V : Next Phase\n"
 .."   B : Creative Mode\n"
 .."   N : Toggle Precipitation\n\n"
-.."Right-click custom buttons 1 & 2 (bound to ',' and '.') to type in whatever command your heart desires. Then hit Enter or Accept to bind the command.\n\n"
-.."IceGrog & squeek IceGrog & squeek, WITHOUT THEM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
-version = "1.2"
+.."Right-click custom buttons 1 & 2 (bound to ',' and '.') to type in whatever command you desire. Then hit Enter or Accept to bind the command."
+.."For nerds: If you want to choose who gets to use the panel, find their userid and paste it into the adminlist.txt file in the mod folder.\n\n"
+.."Thanks IceGrog & squeek! WITHOUT THEM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
+version = "1.3"
 version_compatible = "1.1"
 icon = "modicon.tex"
 icon_atlas = "modicon.xml"
@@ -49,6 +50,15 @@ configuration_options = {
     name = "DISABLE_KEYS",
     label = "Disable Keybinds",
     default = false,
+    options = {
+		{description = "NO", data = false},
+		{description = "YES", data = true}
+	}
+  },
+    {
+    name = "ADMIN_ONLY",
+    label = "Only for Server Admins",
+    default = true,
     options = {
 		{description = "NO", data = false},
 		{description = "YES", data = true}
