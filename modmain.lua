@@ -48,6 +48,9 @@ local margin_dir_horiz = 1
 local margin_size_x = 0
 local margin_size_y = 0
 
+local hideOffset = GLOBAL.Vector3(0,0,0)
+local isHidden = false
+
 local modname = "ConsoleCommandWidget"
 local workshopID = "ConsoleCommandWidget(git)"--"workshop-1862534310"       --------------------change to workshopID for mod releases; DON"T FORGET!!!
 
@@ -67,7 +70,7 @@ local commands = {
 	save = "c_save()",
 }
 
-local function PositionPanel(controls, screensize, background, command_button)
+local function PositionPanel(controls, screensize, background, command_button, hidebutton, command_list)
 	local hudscale = controls.top_root:GetScale()
 	local screenw_full, screenh_full = GLOBAL.unpack(screensize)
 	local screenw = screenw_full/hudscale.x
@@ -77,6 +80,7 @@ local function PositionPanel(controls, screensize, background, command_button)
 	background_w = background_w * .63
 	local xDim = 7 --columns
 	local yDim = 2 --rows
+	hideOffset = GLOBAL.Vector3(background_w*1.4,0,0)
 	local slotPos = {}
 	
 	if screenw < 1820 then --1820, 80, and 70 were determined visually (magic numbers)
@@ -86,9 +90,15 @@ local function PositionPanel(controls, screensize, background, command_button)
 		margin_size_x = 0
 		margin_size_y = 0
 	end
+	
+	--The default position of the panel which is what everything is based on
+	local defaultXPos = (anchor_horiz*background_w/2)+(dir_horiz*screenw/2)+(margin_dir_horiz*margin_size_x)
+	local defaultYPos = (anchor_vert*background_h/2)+(dir_vert*screenh/2)+(margin_dir_vert*margin_size_y)
+	
+	--Every time this is run, it will check if the panel is hidden and move the panel while hidden to make sure it will always go back to the same spot.
 	background:SetPosition(
-		(anchor_horiz*background_w/2)+(dir_horiz*screenw/2)+(margin_dir_horiz*margin_size_x), 
-		(anchor_vert*background_h/2)+(dir_vert*screenh/2)+(margin_dir_vert*margin_size_y), 
+		defaultXPos - (isHidden and hideOffset.x or 0), 
+		defaultYPos - (isHidden and hideOffset.y or 0), 
 		0
 	)
 	
@@ -100,9 +110,18 @@ local function PositionPanel(controls, screensize, background, command_button)
 		end
 	end
 
+	local button_h, button_w = command_button[1]:GetSize()
 	for k, button in pairs(command_button) do
 		button:SetPosition(slotPos[k].x - BUTTON_SPACING * 3 + 3, slotPos[k].y + BUTTON_SPACING / 2 - 3, 0)
+		--these 2 lines are an attempt to keep the tooltips close to the buttons when the screen gets really small
+		button:ClearHoverText()
+		button:SetHoverText(command_list[k].tooltip, {offset_y = button_h*1.2})
 	end
+	
+	hidebutton:SetPosition(defaultXPos - background_w/2 + 10, defaultYPos, 0)
+	local hidebutton_h, hidebutton_w = hidebutton:GetSize()
+	hidebutton:ClearHoverText()
+	hidebutton:SetHoverText("Hide", {offset_x = hidebutton_w*.75, offset_y = 0})
 end
 
 local background = {}
@@ -312,9 +331,10 @@ local function InitButtons(controls)
 					self:SetScale(.6)
 				end
 			end
+			---------------------------------------asdg;osja;gaosidjgsildufhaslfiuashfis 					Remember to check out followmouse function in widget.lua
 			command_button[k]:MoveToFront()
 			-- Tooltip is created here
-			command_button[k]:SetHoverText(cmd.tooltip, {offset_y = 80})
+			command_button[k]:SetHoverText(cmd.tooltip)
 			
 			-- Create key shortcuts
 			if not DISABLE_KEYS and cmd.keybind ~= nil then
@@ -350,22 +370,59 @@ local function InitButtons(controls)
 			command_button[k].customcommandindex = cmd.customcommandindex or 0
 		end
 		
+		----------------------------------------------- Hide button
+		hidebutton = controls.top_root:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+		hidebutton:SetScale(.6)
+		
+		hidebutton:SetOnClick(function(inst)
+			local background_h, background_w = background:GetSize()
+			if isHidden then
+				movePanel(hideOffset, background, command_button, 1)
+				isHidden = not isHidden
+			else
+				movePanel(GLOBAL.Vector3(hideOffset.x * -1, hideOffset.y * -1, hideOffset.z), background, command_button, 1) -- we couldn't multiply a Vector3 by a scalar and had to put in another Vector3 with specifications
+				isHidden = not isHidden
+			end
+		end)
+		
+		hidebutton.ongainfocus = function(isEnabled)
+			if isEnabled and not hidebutton.selected then
+				hidebutton:SetScale(.8)
+			end
+		end
+		hidebutton.onlosefocus = function(isEnabled)
+			if isEnabled and not hidebutton.selected then
+				hidebutton:SetScale(.6)
+			end
+		end
+		hidebutton:MoveToFront()
+		hidebutton:SetHoverText("Hide")
+		-----------------------------------------------
+		
 		--this next section was the key taken from squeek's minimap mod
 		local screensize = {GLOBAL.TheSim:GetScreenSize()}
-		PositionPanel(controls, screensize, background, command_button)
+		PositionPanel(controls, screensize, background, command_button, hidebutton, command_list)
 		
 		local OnUpdate_base = controls.OnUpdate
 		controls.OnUpdate = function(self, dt)
 			OnUpdate_base(self, dt)
 			local curscreensize = {GLOBAL.TheSim:GetScreenSize()}
 			if curscreensize[1] ~= screensize[1] or curscreensize[2] ~= screensize[2] then --if the screen has changed, then reposition the panel
-				PositionPanel(controls, curscreensize, background, command_button)
+				PositionPanel(controls, curscreensize, background, command_button, hidebutton, command_list)
 				screensize = curscreensize
 			end
 		end
 	end
 end
 AddClassPostConstruct("widgets/controls", InitButtons)
+
+--function specifically made for the background and buttons. This is basically just the MoveTo function
+function movePanel(offset, background, buttons, time)
+	background:MoveTo(background:GetPosition(), GLOBAL.Vector3(background:GetPosition().x + offset.x , background:GetPosition().y + offset.y, 0), time)
+	for k,button in ipairs(buttons) do
+		button:MoveTo(button:GetPosition(), GLOBAL.Vector3(button:GetPosition().x + offset.x, button:GetPosition().y + offset.y, 0), time)
+	end
+end
 
 local function ShowWriteableWidget(index)
 	writeable_screen = GLOBAL.ThePlayer.HUD:ShowWriteableWidget(GLOBAL.ThePlayer, writeable_data)

@@ -9,7 +9,7 @@ description = "Adds buttons to the screen for some common commands. Check config
 .."Right-click custom buttons 1 & 2 (bound to ',' and '.') to type in whatever command you desire. Then hit Enter or Accept to bind the command."
 .."For nerds: If you want to choose who gets to use the panel, find their userid and paste it into the adminlist.txt file in the mod folder.\n\n"
 .."Thanks IceGrog & squeek! WITHOUT THEM WE WOULDN'T HAVE BEEN ABLE TO MAKE THIS MOD!"
-version = "1.3"
+version = "1.4"
 version_compatible = "1.1"
 icon = "modicon.tex"
 icon_atlas = "modicon.xml"
