@@ -148,6 +148,8 @@ local command_list = {
 		command_string = commands.creativemode,
 		tooltip = "Creative Mode",
 		image = "researchlab2.tex",
+		atlas = "images/customisation2.xml",
+		scale = .55,
 		keybind = "b"
 	},
 	{
