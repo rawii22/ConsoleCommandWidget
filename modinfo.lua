@@ -1,4 +1,4 @@
-name = "Console Command Shortcuts(git)"
+name = "Console Command Shortcuts"
 author = "rawii22 & lord_of_les_ralph"--"IceGrog"
 description = "Adds buttons to the screen for some common commands. Check configurations for giving access to players.\n"
 .."The following are the only bound commands:\n"

@@ -1,0 +1,7 @@
+<Atlas>
+	<Texture filename="dragarrow.tex" />
+	<Elements>
+		<Element name="dragarrow_inactive.tex" u1="0.01" u2="0.5" v1="0.03" v2="0.97" />
+		<Element name="dragarrow_active.tex" u1="0.5" u2="0.98" v1="0.03" v2="0.97" />
+	</Elements>
+</Atlas>

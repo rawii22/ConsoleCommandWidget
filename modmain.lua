@@ -29,7 +29,7 @@ local DISABLE_KEYS = GetModConfigData("DISABLE_KEYS")
 local ADMIN_ONLY = GetModConfigData("ADMIN_ONLY")
 local CONTROL_LEFT_MOUSE = GLOBAL.CONTROL_ACCEPT  --29
 local CONTROL_RIGHT_MOUSE = 1
-local BUTTON_SPACING = 47
+local BUTTON_SPACING = 75
 
 local Player
 local SignGenerator = GLOBAL.require("signgenerator")
@@ -52,7 +52,7 @@ local hideOffset = GLOBAL.Vector3(0,0,0)
 local isHidden = false
 
 local modname = "ConsoleCommandWidget"
-local workshopID = "ConsoleCommandWidget(git)"--"workshop-1862534310"       --------------------change to workshopID for mod releases; DON"T FORGET!!!
+local workshopID = "ConsoleCommandWidget" --"workshop-1862534310"       --------------------change to workshopID for mod releases; DON"T FORGET!!!
 
 local commands = {
 	nextphase = "TheWorld:PushEvent(\"ms_nextphase\")",
@@ -76,11 +76,12 @@ local function PositionPanel(controls, screensize, background, command_button, h
 	local screenw = screenw_full/hudscale.x
 	local screenh = screenh_full/hudscale.y
 	local background_h, background_w = background:GetSize()
-	background_h = background_h * .63 --scaled the same as defined in InitButtons
-	background_w = background_w * .63
+	background_h = background_h * background:GetLooseScale() --scaled the same as defined in InitButtons
+	background_w = background_w * background:GetLooseScale()
+	hideOffset = GLOBAL.Vector3(background_w*1.4,0,0)
+	local button_h, button_w = command_button[1]:GetSize()
 	local xDim = 7 --columns
 	local yDim = 2 --rows
-	hideOffset = GLOBAL.Vector3(background_w*1.4,0,0)
 	local slotPos = {}
 	
 	if screenw < 1820 then --1820, 80, and 70 were determined visually (magic numbers)
@@ -105,26 +106,27 @@ local function PositionPanel(controls, screensize, background, command_button, h
 	--goes through each button and generates its position based on the background's position
 	for y = 0, (yDim-1) do
 		for x = 0, (xDim-1) do
-			--47 here determines the spacing of the buttons. Also determined visually
-			table.insert(slotPos, GLOBAL.Vector3(background:GetPosition().x + BUTTON_SPACING * x, background:GetPosition().y - BUTTON_SPACING * y, 0))
+			--BUTTON_SPACING determined visually
+			table.insert(slotPos, GLOBAL.Vector3(BUTTON_SPACING * x, BUTTON_SPACING * y, 0))
 		end
 	end
 
-	local button_h, button_w = command_button[1]:GetSize()
 	for k, button in pairs(command_button) do
-		button:SetPosition(slotPos[k].x - BUTTON_SPACING * 3 + 3, slotPos[k].y + BUTTON_SPACING / 2 - 3, 0)
+		button:SetPosition(slotPos[k].y - BUTTON_SPACING / 2 + 4, slotPos[k].x - BUTTON_SPACING * 3 + 3, 0)
 		--these 2 lines are an attempt to keep the tooltips close to the buttons when the screen gets really small
 		button:ClearHoverText()
-		button:SetHoverText(command_list[k].tooltip, {offset_y = button_h*1.2})
+		button:SetHoverText(command_list[k].tooltip, {offset_y = button_h*0.75*hudscale.y})
 	end
 	
 	hidebutton:SetPosition(defaultXPos - background_w/2 + 10, defaultYPos, 0)
 	local hidebutton_h, hidebutton_w = hidebutton:GetSize()
 	hidebutton:ClearHoverText()
-	hidebutton:SetHoverText("Hide", {offset_x = hidebutton_w*.75, offset_y = 0})
+	hidebutton:SetHoverText("Hide", {offset_x = hidebutton_w*.25*hudscale.x, offset_y = 0})
 end
 
 local background = {}
+local hidebutton = {}
+local dragarrow = nil
 local letter = {}
 local command_icon = {}
 local command_button = {}
@@ -272,6 +274,11 @@ local writeable_data = {
     --defaulttext = SignGenerator,
 }
 
+local dragarrow_atlas = "images/dragarrow.xml"
+local dragarrow_tex = "images/dragarrow.tex"
+local dragarrow_inactive_img = "dragarrow_inactive.tex"
+local dragarrow_active_img = "dragarrow_active.tex"
+
 Assets = {
 	Asset("ATLAS", "images/basic_back.xml"),
 	Asset("IMAGE", "images/basic_back.tex"),
@@ -283,11 +290,9 @@ Assets = {
 	Asset("IMAGE", "images/customisation2.tex"),
 	Asset("ATLAS", "images/customisation.xml"),
 	Asset("IMAGE", "images/customisation.tex"),
+	Asset("ATLAS", dragarrow_atlas),
+	Asset("IMAGE", dragarrow_tex),
 }
-
---[[
-TheNet:GetClientTable()[playerNumber].admin
-]]
 
 --[[
 ===========================
@@ -316,24 +321,32 @@ local function InitButtons(controls)
 		
 		for k,cmd in ipairs(command_list) do
 			-- Create square buttons
-			command_button[k] = controls.top_root:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
-			command_button[k]:SetScale(.6)
+			command_button[k] = background:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+			command_button[k]:SetScale(1)
+			command_button[k]:SetRotation(-90)
 			local rpcName = cmd.rpcName or "receivecommand"
 			command_button[k]:SetOnClick(function(inst) return SendModRPCToServer(MOD_RPC[modname][rpcName], cmd.command_string) end)
 			-- Make the buttons bulge when hovered over
 			command_button[k].ongainfocus = function(isEnabled)
 				local self = command_button[k]
 				if isEnabled and not self.selected then
-					self:SetScale(.8)
+					self:SetScale(1.2)
+				end
+				if dragarrow then
+					dragarrow:Hide()
 				end
 			end
 			command_button[k].onlosefocus = function(isEnabled)
 				local self = command_button[k]
 				if isEnabled and not self.selected then
-					self:SetScale(.6)
+					self:SetScale(1)
+				end
+				if dragarrow and background:GetDeepestFocus() == background then
+					dragarrow:SetTexture(dragarrow_atlas, dragarrow_inactive_img)
+					dragarrow:Show()
 				end
 			end
-			---------------------------------------asdg;osja;gaosidjgsildufhaslfiuashfis 					Remember to check out followmouse function in widget.lua
+			command_button[k].clickoffset = GLOBAL.Vector3(3,0,0)
 			command_button[k]:MoveToFront()
 			-- Tooltip is created here
 			command_button[k]:SetHoverText(cmd.tooltip)
@@ -373,10 +386,10 @@ local function InitButtons(controls)
 		end
 		
 		----------------------------------------------- Hide button
-		hidebutton = controls.top_root:AddChild(ImageButton("images/hud.xml","inv_slot_spoiled.tex","inv_slot.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex","inv_slot_spoiled.tex"))
+		hidebutton = controls.top_root:AddChild(ImageButton("images/hud.xml","inv_slot.tex","inv_slot.tex","inv_slot.tex","inv_slot.tex","inv_slot.tex"))
 		hidebutton:SetScale(.6)
 		
-		hidebutton:SetOnClick(function(inst)
+		hidebutton:SetOnClick(function()
 			local background_h, background_w = background:GetSize()
 			if isHidden then
 				movePanel(hideOffset, background, command_button, 1)
@@ -399,8 +412,88 @@ local function InitButtons(controls)
 		end
 		hidebutton:MoveToFront()
 		hidebutton:SetHoverText("Hide")
-		-----------------------------------------------
 		
+		-----------------------------------------------
+		--from muche's WidgetDragger demo mod
+		
+		oldbg_OnControl = background.OnControl
+		background.OnControl = function(self, control, down)
+			local res = oldbg_OnControl ~= nil and oldbg_OnControl(self, control, down) or false
+			if res then
+				return true
+			end
+			if control == GLOBAL.CONTROL_ACCEPT then
+				if down and self:IsDeepestFocus() then
+					self:StartDrag()
+				else
+					self:EndDrag()
+				end
+				return true
+			end
+			return false
+		end
+		
+		local oldbg_OnGainFocus = background.OnGainFocus
+		background.OnGainFocus = function(self)
+			if oldbg_OnGainFocus ~= nil then
+				oldbg_OnGainFocus(self, controller)
+			end
+			
+			if dragarrow == nil then
+				dragarrow = controls.top_root:AddChild(Image(dragarrow_atlas, dragarrow_inactive_img))
+				dragarrow:SetHAnchor(GLOBAL.ANCHOR_LEFT)
+				dragarrow:SetVAnchor(GLOBAL.ANCHOR_BOTTOM)
+				dragarrow:SetClickable(false) -- make dragarrow to be ignored when determining focus
+			end
+			dragarrow:Show()
+			dragarrow:FollowMouse()
+			GLOBAL.TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/click_mouseover")
+		end
+
+		local oldbg_OnLoseFocus = background.OnLoseFocus
+		background.OnLoseFocus = function(self)
+			if oldbg_OnLoseFocus ~= nil then
+				oldbg_OnLoseFocus(self, controller)
+			end
+			
+			dragarrow:StopFollowMouse()
+			dragarrow:Hide()
+			if self.followhandler ~= nil then
+				-- cancel drag in progress
+				-- self:EndDrag()
+			end
+			GLOBAL.TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/click_mouseover")
+		end
+		
+		background.StartDrag = function(self)
+			local mousestartpos = GLOBAL.TheInput:GetScreenPosition()
+			local bgstartpos = self:GetPosition()
+			if self.followhandler == nil then
+				self.followhandler = GLOBAL.TheInput:AddMoveHandler(function(x,y)
+					local hudscale = controls.top_root:GetScale()
+					local mouseposdelta = mousestartpos - GLOBAL.TheInput:GetScreenPosition()
+					local bgposdelta = GLOBAL.Vector3(1/hudscale.x*mouseposdelta.x, 1/hudscale.y*mouseposdelta.y, 0)
+					self:SetPosition(bgstartpos - bgposdelta)
+				end)
+			end
+			if dragarrow then
+				dragarrow:SetTexture(dragarrow_atlas, dragarrow_active_img)
+			end
+			GLOBAL.TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/click_mouseover")
+		end
+
+		background.EndDrag = function(self)
+			if self.followhandler ~= nil then
+				self.followhandler:Remove()
+				self.followhandler = nil
+			end
+			if dragarrow then
+				dragarrow:SetTexture(dragarrow_atlas, dragarrow_inactive_img)
+			end
+			GLOBAL.TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/click_mouseover")
+		end
+		
+		-----------------------------------------------
 		--this next section was the key taken from squeek's minimap mod
 		local screensize = {GLOBAL.TheSim:GetScreenSize()}
 		PositionPanel(controls, screensize, background, command_button, hidebutton, command_list)
@@ -421,9 +514,6 @@ AddClassPostConstruct("widgets/controls", InitButtons)
 --function specifically made for the background and buttons. This is basically just the MoveTo function
 function movePanel(offset, background, buttons, time)
 	background:MoveTo(background:GetPosition(), GLOBAL.Vector3(background:GetPosition().x + offset.x , background:GetPosition().y + offset.y, 0), time)
-	for k,button in ipairs(buttons) do
-		button:MoveTo(button:GetPosition(), GLOBAL.Vector3(button:GetPosition().x + offset.x, button:GetPosition().y + offset.y, 0), time)
-	end
 end
 
 local function ShowWriteableWidget(index)
