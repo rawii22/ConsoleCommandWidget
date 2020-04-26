@@ -30,6 +30,8 @@ local ADMIN_ONLY = GetModConfigData("ADMIN_ONLY")
 local CONTROL_LEFT_MOUSE = GLOBAL.CONTROL_ACCEPT  --29
 local CONTROL_RIGHT_MOUSE = 1
 local BUTTON_SPACING = 75
+local HOME_TO_HIDDEN_MOVETIME = 1
+local CURRENT_TO_HOME_MOVETIME = 0.5
 
 local Player
 local SignGenerator = GLOBAL.require("signgenerator")
@@ -39,6 +41,9 @@ local ImageButton = GLOBAL.require("widgets/imagebutton")
 local Button = GLOBAL.require("widgets/button")
 local io = GLOBAL.require("io")
 
+local button = Button()
+
+
 local dir_vert = -2
 local dir_horiz = -1
 local anchor_vert = 1
@@ -47,9 +52,6 @@ local margin_dir_vert = 1
 local margin_dir_horiz = 1
 local margin_size_x = 0
 local margin_size_y = 0
-
-local hideOffset = GLOBAL.Vector3(0,0,0)
-local isHidden = false
 
 local modname = "ConsoleCommandWidget"
 local workshopID = "ConsoleCommandWidget" --"workshop-1862534310"       --------------------change to workshopID for mod releases; DON"T FORGET!!!
@@ -78,8 +80,9 @@ local function PositionPanel(controls, screensize, background, command_button, h
 	local background_h, background_w = background:GetSize()
 	background_h = background_h * background:GetLooseScale() --scaled the same as defined in InitButtons
 	background_w = background_w * background:GetLooseScale()
-	hideOffset = GLOBAL.Vector3(background_w*1.4,0,0)
 	local button_h, button_w = command_button[1]:GetSize()
+	button_h = button_h * command_button[1]:GetScale().y
+	button_w = button_w * command_button[1]:GetScale().x
 	local xDim = 7 --columns
 	local yDim = 2 --rows
 	local slotPos = {}
@@ -93,15 +96,22 @@ local function PositionPanel(controls, screensize, background, command_button, h
 	end
 	
 	--The default position of the panel which is what everything is based on
-	local defaultXPos = (anchor_horiz*background_w/2)+(dir_horiz*screenw/2)+(margin_dir_horiz*margin_size_x)
-	local defaultYPos = (anchor_vert*background_h/2)+(dir_vert*screenh/2)+(margin_dir_vert*margin_size_y)
-	
-	--Every time this is run, it will check if the panel is hidden and move the panel while hidden to make sure it will always go back to the same spot.
-	background:SetPosition(
-		defaultXPos - (isHidden and hideOffset.x or 0), 
-		defaultYPos - (isHidden and hideOffset.y or 0), 
+	background.homePos = GLOBAL.Vector3(
+		(anchor_horiz*background_w/2)+(dir_horiz*screenw/2)+(margin_dir_horiz*margin_size_x),
+		(anchor_vert*background_h/2)+(dir_vert*screenh/2)+(margin_dir_vert*margin_size_y),
 		0
 	)
+	
+	--Calculate position where panel will be sent to to hide
+	background.hidePos = GLOBAL.Vector3(
+		(dir_horiz*screenw*0.5) + (-1*background_w*(2/3)) + (margin_dir_horiz*margin_size_x),
+		(dir_vert*screenh*0.5) + (background_h*0.5) + (margin_dir_vert*margin_size_y),
+		0
+	)
+	
+	--Every time this is run, it will check if the panel is hidden and move the panel while hidden to make sure it will always go back to the same spot.
+	background:SetPosition(background.isHidden and background.hidePos or background.homePos)
+	background.hasMoved = false
 	
 	--goes through each button and generates its position based on the background's position
 	for y = 0, (yDim-1) do
@@ -115,13 +125,20 @@ local function PositionPanel(controls, screensize, background, command_button, h
 		button:SetPosition(slotPos[k].y - BUTTON_SPACING / 2 + 4, slotPos[k].x - BUTTON_SPACING * 3 + 3, 0)
 		--these 2 lines are an attempt to keep the tooltips close to the buttons when the screen gets really small
 		button:ClearHoverText()
-		button:SetHoverText(command_list[k].tooltip, {offset_y = button_h*0.75*hudscale.y})
+		button:SetHoverText(command_list[k].tooltip, {offset_y = button_h--[[*0.75*hudscale.y]]})
 	end
 	
-	hidebutton:SetPosition(defaultXPos - background_w/2 + 10, defaultYPos, 0)
+	hidebutton.homePos = GLOBAL.Vector3(
+		background.homePos.x - background_w/2 + 10,
+		background.homePos.y,
+		0
+	)
+	hidebutton:SetPosition(hidebutton.homePos.x, hidebutton.homePos.y, 0)
 	local hidebutton_h, hidebutton_w = hidebutton:GetSize()
+	hidebutton_h = hidebutton_h * hidebutton:GetScale().y
+	hidebutton_w = hidebutton_w * hidebutton:GetScale().x
 	hidebutton:ClearHoverText()
-	hidebutton:SetHoverText("Hide", {offset_x = hidebutton_w*.25*hudscale.x, offset_y = 0})
+	hidebutton:SetHoverText("Hide", {offset_x = hidebutton_w--[[*.25*hudscale.x]], offset_y = 0})
 end
 
 local background = {}
@@ -318,6 +335,8 @@ local function InitButtons(controls)
 		background:SetScale(.63)
 		background:SetRotation(90)
 		background:MoveToFront()
+		background.isHidden = false
+		background.hasMoved = false
 		
 		for k,cmd in ipairs(command_list) do
 			-- Create square buttons
@@ -387,27 +406,39 @@ local function InitButtons(controls)
 		
 		----------------------------------------------- Hide button
 		hidebutton = controls.top_root:AddChild(ImageButton("images/hud.xml","inv_slot.tex","inv_slot.tex","inv_slot.tex","inv_slot.tex","inv_slot.tex"))
-		hidebutton:SetScale(.6)
+		hidebutton:SetScale(.5)
 		
 		hidebutton:SetOnClick(function()
 			local background_h, background_w = background:GetSize()
-			if isHidden then
-				movePanel(hideOffset, background, command_button, 1)
-				isHidden = not isHidden
+			if background.isHidden then
+				-- Move from hidden to home pos
+				background:MoveTo(background.hidePos, background.homePos, HOME_TO_HIDDEN_MOVETIME)
+				background.isHidden = not background.isHidden
 			else
-				movePanel(GLOBAL.Vector3(hideOffset.x * -1, hideOffset.y * -1, hideOffset.z), background, command_button, 1) -- we couldn't multiply a Vector3 by a scalar and had to put in another Vector3 with specifications
-				isHidden = not isHidden
+				if background.hasMoved then
+					-- Move from current to home pos
+					background:MoveTo(background:GetPosition(), background.homePos, CURRENT_TO_HOME_MOVETIME, function()
+						-- Move offscreen
+						background:MoveTo(background.homePos, background.hidePos, HOME_TO_HIDDEN_MOVETIME)
+					end)
+					hidebutton:MoveTo(hidebutton:GetPosition(), hidebutton.homePos, CURRENT_TO_HOME_MOVETIME)
+					background.hasMoved = false
+				else
+					-- Move offscreen
+					background:MoveTo(background.homePos, background.hidePos, HOME_TO_HIDDEN_MOVETIME)
+				end
+				background.isHidden = not background.isHidden
 			end
 		end)
 		
 		hidebutton.ongainfocus = function(isEnabled)
 			if isEnabled and not hidebutton.selected then
-				hidebutton:SetScale(.8)
+				hidebutton:SetScale(.54)
 			end
 		end
 		hidebutton.onlosefocus = function(isEnabled)
 			if isEnabled and not hidebutton.selected then
-				hidebutton:SetScale(.6)
+				hidebutton:SetScale(.5)
 			end
 		end
 		hidebutton:MoveToFront()
@@ -468,17 +499,22 @@ local function InitButtons(controls)
 		background.StartDrag = function(self)
 			local mousestartpos = GLOBAL.TheInput:GetScreenPosition()
 			local bgstartpos = self:GetPosition()
+			local hbstartpos = hidebutton:GetPosition()
 			if self.followhandler == nil then
 				self.followhandler = GLOBAL.TheInput:AddMoveHandler(function(x,y)
 					local hudscale = controls.top_root:GetScale()
 					local mouseposdelta = mousestartpos - GLOBAL.TheInput:GetScreenPosition()
 					local bgposdelta = GLOBAL.Vector3(1/hudscale.x*mouseposdelta.x, 1/hudscale.y*mouseposdelta.y, 0)
 					self:SetPosition(bgstartpos - bgposdelta)
+					
+					local hbposdelta = GLOBAL.Vector3(1/hudscale.x*mouseposdelta.x, 1/hudscale.y*mouseposdelta.y, 0)
+					hidebutton:SetPosition(hbstartpos - hbposdelta)
 				end)
 			end
 			if dragarrow then
 				dragarrow:SetTexture(dragarrow_atlas, dragarrow_active_img)
 			end
+			background.hasMoved = true
 			GLOBAL.TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/click_mouseover")
 		end
 
@@ -510,11 +546,6 @@ local function InitButtons(controls)
 	end
 end
 AddClassPostConstruct("widgets/controls", InitButtons)
-
---function specifically made for the background and buttons. This is basically just the MoveTo function
-function movePanel(offset, background, buttons, time)
-	background:MoveTo(background:GetPosition(), GLOBAL.Vector3(background:GetPosition().x + offset.x , background:GetPosition().y + offset.y, 0), time)
-end
 
 local function ShowWriteableWidget(index)
 	writeable_screen = GLOBAL.ThePlayer.HUD:ShowWriteableWidget(GLOBAL.ThePlayer, writeable_data)
