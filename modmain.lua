@@ -41,9 +41,6 @@ local ImageButton = GLOBAL.require("widgets/imagebutton")
 local Button = GLOBAL.require("widgets/button")
 local io = GLOBAL.require("io")
 
-local button = Button()
-
-
 local dir_vert = -2
 local dir_horiz = -1
 local anchor_vert = 1
@@ -72,7 +69,7 @@ local commands = {
 	save = "c_save()",
 }
 
-local function PositionPanel(controls, screensize, background, command_button, hidebutton, command_list)
+local function PositionPanel(controls, screensize, resizescale, oldrootscale, background, command_button, hidebutton, command_list)
 	local hudscale = controls.top_root:GetScale()
 	local screenw_full, screenh_full = GLOBAL.unpack(screensize)
 	local screenw = screenw_full/hudscale.x
@@ -104,16 +101,19 @@ local function PositionPanel(controls, screensize, background, command_button, h
 	
 	--Calculate position where panel will be sent to to hide
 	background.hidePos = GLOBAL.Vector3(
-		(dir_horiz*screenw*0.5) + (-1*background_w*(2/3)) + (margin_dir_horiz*margin_size_x),
-		(dir_vert*screenh*0.5) + (background_h*0.5) + (margin_dir_vert*margin_size_y),
+		(dir_horiz*screenw*0.5) + (-1*anchor_horiz*background_w*(3/4)) + (margin_dir_horiz*margin_size_x),
+		(dir_vert*screenh*0.5) + (anchor_vert*background_h*0.5) + (margin_dir_vert*margin_size_y),
 		0
 	)
 	
-	--Every time this is run, it will check if the panel is hidden and move the panel while hidden to make sure it will always go back to the same spot.
-	background:SetPosition(background.isHidden and background.hidePos or background.homePos)
-	background.hasMoved = false
+	--Calculate new position for a panel that's been dragged
+	local oldbgpos = background:GetPosition()
+	local scaledbgpos = GLOBAL.Vector3(oldbgpos.x * resizescale.x * (oldrootscale.x/hudscale.x), oldbgpos.y * resizescale.y * (oldrootscale.y/hudscale.y), 0)
 	
-	--goes through each button and generates its position based on the background's position
+	--If panel hidden, set to hidden spot, otherwise set to home pos + any distance dragged
+	background:SetPosition(background.isHidden and background.hidePos or background.hasMoved and scaledbgpos or background.homePos)
+	
+	--Generates list of positions for buttons
 	for y = 0, (yDim-1) do
 		for x = 0, (xDim-1) do
 			--BUTTON_SPACING determined visually
@@ -128,12 +128,10 @@ local function PositionPanel(controls, screensize, background, command_button, h
 		button:SetHoverText(command_list[k].tooltip, {offset_y = button_h--[[*0.75*hudscale.y]]})
 	end
 	
-	hidebutton.homePos = GLOBAL.Vector3(
-		background.homePos.x - background_w/2 + 10,
-		background.homePos.y,
-		0
-	)
-	hidebutton:SetPosition(hidebutton.homePos.x, hidebutton.homePos.y, 0)
+	local hidebuttonoffset = GLOBAL.Vector3(-1*background_w/2 + 10, 0, 0)
+	hidebutton.homePos = background.homePos + hidebuttonoffset
+	
+	hidebutton:SetPosition(background.hasMoved and background:GetPosition() + hidebuttonoffset or hidebutton.homePos)
 	local hidebutton_h, hidebutton_w = hidebutton:GetSize()
 	hidebutton_h = hidebutton_h * hidebutton:GetScale().y
 	hidebutton_w = hidebutton_w * hidebutton:GetScale().x
@@ -532,15 +530,19 @@ local function InitButtons(controls)
 		-----------------------------------------------
 		--this next section was the key taken from squeek's minimap mod
 		local screensize = {GLOBAL.TheSim:GetScreenSize()}
-		PositionPanel(controls, screensize, background, command_button, hidebutton, command_list)
+		local rootscale = controls.top_root:GetScale()
+		PositionPanel(controls, screensize, GLOBAL.Vector3(1,1,1), GLOBAL.Vector3(1,1,1), background, command_button, hidebutton, command_list)
 		
 		local OnUpdate_base = controls.OnUpdate
 		controls.OnUpdate = function(self, dt)
 			OnUpdate_base(self, dt)
 			local curscreensize = {GLOBAL.TheSim:GetScreenSize()}
+			-- Use ratio (curscreensize/screensize) to translate old position of panel to new screen size
 			if curscreensize[1] ~= screensize[1] or curscreensize[2] ~= screensize[2] then --if the screen has changed, then reposition the panel
-				PositionPanel(controls, curscreensize, background, command_button, hidebutton, command_list)
+				local resizescale = GLOBAL.Vector3(curscreensize[1]/screensize[1], curscreensize[2]/screensize[2], 0)
+				PositionPanel(controls, curscreensize, resizescale, rootscale, background, command_button, hidebutton, command_list)
 				screensize = curscreensize
+				rootscale = controls.top_root:GetScale()
 			end
 		end
 	end
