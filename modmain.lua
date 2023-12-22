@@ -322,9 +322,14 @@ local function InitButtons(controls)
 		end
 	end
 	--A custom way of adding admins to the game who can access the widget
-	for line in io.lines("../mods/"..workshopID.."/adminlist.txt") do
-		if GLOBAL.ThePlayer.userid == line then
-			isAdmin = true
+	local adminFile = "../mods/"..workshopID.."/adminlist.txt"
+	local f = io.open(adminFile, "r")
+	if f ~= nil then
+		io.close(f)
+		for line in io.lines(adminFile) do
+			if GLOBAL.ThePlayer.userid == line then
+				isAdmin = true
+			end
 		end
 	end
 		
